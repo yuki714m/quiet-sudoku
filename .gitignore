@@ -1,0 +1,14 @@
+# Local screenshots and temporary QA artifacts
+*.log
+*.tmp
+*.temp
+*-check.png
+quiet-sudoku-current-design.png
+quiet-sudoku-app-mobile.png
+quiet-sudoku-app-desktop.png
+pwa-mobile-check.png
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/

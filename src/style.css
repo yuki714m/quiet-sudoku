@@ -331,10 +331,6 @@ select {
   background: var(--surface);
 }
 
-.cell.given {
-  background: var(--surface) !important;
-}
-
 .cell.selected-box::after {
   content: "";
   position: absolute;

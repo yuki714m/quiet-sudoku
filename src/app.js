@@ -144,7 +144,7 @@
   function saveHistory(result) {
     const history = readHistory();
     history.unshift(result);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, 30)));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     renderHistory();
   }
 
@@ -205,8 +205,14 @@
       historyText.textContent = "まだクリア履歴はありません。";
       return;
     }
-    const latest = history[0];
-    historyText.textContent = `${labelFor(latest.difficulty)}を${formatTime(latest.elapsed)}でクリア。ミス${latest.mistakes}、ヒント${latest.hints}。`;
+    historyText.textContent = history.slice(0, 3).map((result) => (
+      `${shortDate(result.completedAt)} ${labelFor(result.difficulty)} ${formatTime(result.elapsed)} / ミス${result.mistakes} / ヒント${result.hints}`
+    )).join("  |  ");
+  }
+
+  function shortDate(value) {
+    if (!value) return "";
+    return value.slice(5, 10).replace("-", "/");
   }
 
   function renderDaily() {
@@ -665,6 +671,11 @@
     });
   }
 
+  function requestPersistentStorage() {
+    if (!navigator.storage || typeof navigator.storage.persist !== "function") return;
+    navigator.storage.persist().catch(() => {});
+  }
+
   difficultySelect.addEventListener("change", () => {
     clearHint();
     loadPuzzle(difficultySelect.value);
@@ -723,5 +734,6 @@
   ensureTodayEntry();
   loadState();
   registerServiceWorker();
+  requestPersistentStorage();
   tick();
 })();

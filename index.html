@@ -25,21 +25,26 @@
       </header>
 
       <section class="status-bar" aria-label="ゲーム状況">
-        <label class="status-card">
-          <span class="status-label">難易度</span>
+        <label class="status-chip">
+          <span class="sr-only">難易度</span>
           <select id="difficultySelect" aria-label="難易度を選ぶ">
             <option value="easy">Easy</option>
             <option value="normal">Normal</option>
             <option value="hard">Hard</option>
           </select>
         </label>
-        <div class="status-card">
-          <span class="status-label">時間</span>
+        <div class="status-chip timer-chip">
+          <span class="sr-only">時間</span>
           <strong id="timerText">00:00</strong>
+          <button class="pause-icon-button" id="pauseButton" type="button" aria-label="一時停止">⏸</button>
         </div>
-        <div class="status-card">
-          <span class="status-label">ミス</span>
-          <strong><span id="mistakeCount">0</span></strong>
+        <div class="status-chip">
+          <span>ミス</span>
+          <strong id="mistakeCount">0</strong>
+        </div>
+        <div class="status-chip">
+          <span>ヒント</span>
+          <strong id="hintCount">0</strong>
         </div>
       </section>
 
@@ -53,13 +58,13 @@
 
       <section class="controls" aria-label="操作">
         <div class="tool-row">
-          <button id="pauseButton" type="button">一時停止</button>
           <button id="undoButton" type="button">元に戻す</button>
           <button id="eraseButton" type="button">消す</button>
           <label class="note-toggle">
             <input id="noteMode" type="checkbox">
             <span>メモ</span>
           </label>
+          <button id="hintButton" type="button">ヒント</button>
         </div>
 
         <div class="number-pad" aria-label="数字入力">
@@ -72,6 +77,20 @@
           <button type="button" data-number="7">7</button>
           <button type="button" data-number="8">8</button>
           <button type="button" data-number="9">9</button>
+        </div>
+      </section>
+
+      <section class="hint-card" id="hintCard" aria-live="polite" hidden>
+        <div class="hint-copy">
+          <p class="eyebrow">ヒント</p>
+          <h2 id="hintStepTitle">ヒント</h2>
+          <p id="hintStepText"></p>
+        </div>
+        <div class="hint-actions">
+          <button id="hintPrevButton" type="button">前へ</button>
+          <button id="hintNextButton" type="button">次へ</button>
+          <button class="primary-button" id="hintApplyButton" type="button">答えを入れる</button>
+          <button id="hintCloseButton" type="button">閉じる</button>
         </div>
       </section>
 
@@ -132,6 +151,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="src/puzzles.js"></script>
+    <script src="src/hints.js"></script>
     <script src="src/app.js"></script>
   </body>
 </html>

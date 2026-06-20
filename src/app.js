@@ -7,11 +7,13 @@
   const difficultySelect = document.getElementById("difficultySelect");
   const timerText = document.getElementById("timerText");
   const mistakeCount = document.getElementById("mistakeCount");
+  const hintCount = document.getElementById("hintCount");
   const pauseButton = document.getElementById("pauseButton");
   const resumeButton = document.getElementById("resumeButton");
   const pauseCover = document.getElementById("pauseCover");
   const undoButton = document.getElementById("undoButton");
   const eraseButton = document.getElementById("eraseButton");
+  const hintButton = document.getElementById("hintButton");
   const noteMode = document.getElementById("noteMode");
   const toast = document.getElementById("toast");
   const historyText = document.getElementById("historyText");
@@ -30,6 +32,13 @@
   const anotherPuzzleButton = document.getElementById("anotherPuzzleButton");
   const viewHistoryButton = document.getElementById("viewHistoryButton");
   const closeClearButton = document.getElementById("closeClearButton");
+  const hintCard = document.getElementById("hintCard");
+  const hintStepTitle = document.getElementById("hintStepTitle");
+  const hintStepText = document.getElementById("hintStepText");
+  const hintPrevButton = document.getElementById("hintPrevButton");
+  const hintNextButton = document.getElementById("hintNextButton");
+  const hintApplyButton = document.getElementById("hintApplyButton");
+  const hintCloseButton = document.getElementById("hintCloseButton");
 
   const state = {
     difficulty: "easy",
@@ -49,6 +58,8 @@
 
   let lastTick = Date.now();
   let toastTimer = 0;
+  let activeHint = null;
+  let hintStepIndex = 0;
 
   function emptyNotes() {
     return Array.from({ length: 81 }, () => []);
@@ -78,6 +89,7 @@
     state.source = settings.source || "regular";
     state.dailyDate = settings.dailyDate || "";
     state.undoStack = [];
+    clearHint();
     difficultySelect.value = difficulty;
     saveState();
     render();
@@ -227,10 +239,14 @@
     renderBoard();
     timerText.textContent = formatTime(state.elapsed);
     mistakeCount.textContent = state.mistakes;
+    hintCount.textContent = state.hints;
     pauseCover.hidden = !state.paused;
-    pauseButton.textContent = state.paused ? "再開" : "一時停止";
+    pauseButton.textContent = state.paused ? "▶" : "⏸";
+    pauseButton.setAttribute("aria-label", state.paused ? "再開" : "一時停止");
     undoButton.disabled = !state.undoStack.length || state.completed;
     eraseButton.disabled = state.completed || state.givens[state.selected];
+    hintButton.disabled = state.completed || !state.board.some((value, index) => !value && !state.givens[index]);
+    renderHintCard();
     renderHistory();
     renderDaily();
   }
@@ -263,10 +279,49 @@
     const classes = ["cell"];
     if (state.givens[index]) classes.push("given");
     if (index === state.selected) classes.push("selected");
+    classes.push(...hintClassesForCell(index));
+    if (isSameBox(index, state.selected)) {
+      classes.push("selected-box");
+      classes.push(...boxEdgeClasses(index, state.selected));
+    }
     if (isRelated(index, state.selected) && index !== state.selected) classes.push("related");
     if (value && selectedValue && value === selectedValue) classes.push("same");
     if (value && value !== puzzleFor(state.difficulty).solution[index]) classes.push("wrong");
     return classes.join(" ");
+  }
+
+  function hintClassesForCell(index) {
+    if (!activeHint) return [];
+    const classes = [];
+    const row = Math.floor(index / 9);
+    const col = index % 9;
+    if (activeHint.wrongCells && activeHint.wrongCells.some(([r, c]) => r === row && c === col)) {
+      classes.push("hint-wrong");
+    }
+    const step = activeHint.steps && activeHint.steps[hintStepIndex];
+    if (!step) return classes;
+    const highlight = step.highlight || {};
+    const area = highlight.area || highlight;
+    if (isInHintArea(row, col, area)) classes.push("hint-area");
+    if (isHintTarget(row, col, highlight)) classes.push("hint-target");
+    return classes;
+  }
+
+  function isInHintArea(row, col, area) {
+    if (!area) return false;
+    if (area.type === "row") return row === area.row;
+    if (area.type === "column") return col === area.col;
+    if (area.type === "block") {
+      return Math.floor(row / 3) === area.blockRow && Math.floor(col / 3) === area.blockCol;
+    }
+    return false;
+  }
+
+  function isHintTarget(row, col, highlight) {
+    if (!highlight) return false;
+    if (highlight.type === "cell") return row === highlight.row && col === highlight.col;
+    if (highlight.type === "cells") return highlight.cells.some(([r, c]) => r === row && c === col);
+    return false;
   }
 
   function isRelated(a, b) {
@@ -277,6 +332,29 @@
     const boxA = Math.floor(rowA / 3) * 3 + Math.floor(colA / 3);
     const boxB = Math.floor(rowB / 3) * 3 + Math.floor(colB / 3);
     return rowA === rowB || colA === colB || boxA === boxB;
+  }
+
+  function isSameBox(a, b) {
+    const rowA = Math.floor(a / 9);
+    const rowB = Math.floor(b / 9);
+    const colA = a % 9;
+    const colB = b % 9;
+    return Math.floor(rowA / 3) === Math.floor(rowB / 3) && Math.floor(colA / 3) === Math.floor(colB / 3);
+  }
+
+  function boxEdgeClasses(index, selectedIndex) {
+    const row = Math.floor(index / 9);
+    const col = index % 9;
+    const selectedRow = Math.floor(selectedIndex / 9);
+    const selectedCol = selectedIndex % 9;
+    const boxTop = Math.floor(selectedRow / 3) * 3;
+    const boxLeft = Math.floor(selectedCol / 3) * 3;
+    const classes = [];
+    if (row === boxTop) classes.push("box-top");
+    if (row === boxTop + 2) classes.push("box-bottom");
+    if (col === boxLeft) classes.push("box-left");
+    if (col === boxLeft + 2) classes.push("box-right");
+    return classes;
   }
 
   function cellLabel(index, value) {
@@ -316,6 +394,7 @@
     }
 
     pushUndo();
+    clearHint();
     if (noteMode.checked) {
       toggleNote(index, number);
     } else {
@@ -349,6 +428,7 @@
   function eraseSelected() {
     if (state.paused || state.completed || state.givens[state.selected]) return;
     pushUndo();
+    clearHint();
     state.board[state.selected] = "";
     state.notes[state.selected] = [];
     saveState();
@@ -363,8 +443,78 @@
     state.mistakes = previous.mistakes;
     state.hints = previous.hints || 0;
     state.completed = previous.completed;
+    clearHint();
     saveState();
     render();
+  }
+
+  function clearHint() {
+    activeHint = null;
+    hintStepIndex = 0;
+  }
+
+  function useHint() {
+    if (state.paused || state.completed) return;
+    activeHint = QUIET_SUDOKU_HINTS.getNextHint(state.board, puzzleFor(state.difficulty).solution);
+    hintStepIndex = 0;
+    if (typeof activeHint.row === "number" && typeof activeHint.col === "number") {
+      state.selected = activeHint.row * 9 + activeHint.col;
+    }
+    render();
+  }
+
+  function renderHintCard() {
+    if (!activeHint) {
+      hintCard.hidden = true;
+      return;
+    }
+
+    hintCard.hidden = false;
+    const steps = activeHint.steps || [];
+    const step = steps[hintStepIndex];
+    hintStepTitle.textContent = step ? step.title : "ヒント";
+    hintStepText.textContent = step ? step.text : activeHint.message;
+    hintPrevButton.disabled = hintStepIndex <= 0 || !steps.length;
+    hintNextButton.disabled = hintStepIndex >= steps.length - 1 || !steps.length;
+    hintApplyButton.disabled = !canApplyHintAnswer();
+  }
+
+  function canApplyHintAnswer() {
+    if (!activeHint || !activeHint.steps || !activeHint.steps.length) return false;
+    if (hintStepIndex < activeHint.steps.length - 1) return false;
+    const index = activeHint.row * 9 + activeHint.col;
+    return !state.completed && !state.givens[index] && !state.board[index];
+  }
+
+  function showPreviousHintStep() {
+    if (!activeHint || hintStepIndex <= 0) return;
+    hintStepIndex -= 1;
+    render();
+  }
+
+  function showNextHintStep() {
+    if (!activeHint || !activeHint.steps || hintStepIndex >= activeHint.steps.length - 1) return;
+    hintStepIndex += 1;
+    render();
+  }
+
+  function closeHint() {
+    clearHint();
+    render();
+  }
+
+  function applyHintAnswer() {
+    if (!canApplyHintAnswer()) return;
+    const index = activeHint.row * 9 + activeHint.col;
+    pushUndo();
+    state.board = QUIET_SUDOKU_HINTS.applyHintAnswer(state.board, activeHint);
+    state.notes[index] = [];
+    state.selected = index;
+    state.hints += 1;
+    clearHint();
+    saveState();
+    render();
+    checkComplete();
   }
 
   function buildResult() {
@@ -472,6 +622,7 @@
   }
 
   difficultySelect.addEventListener("change", () => {
+    clearHint();
     loadPuzzle(difficultySelect.value);
   });
 
@@ -489,6 +640,11 @@
 
   undoButton.addEventListener("click", undo);
   eraseButton.addEventListener("click", eraseSelected);
+  hintButton.addEventListener("click", useHint);
+  hintPrevButton.addEventListener("click", showPreviousHintStep);
+  hintNextButton.addEventListener("click", showNextHintStep);
+  hintApplyButton.addEventListener("click", applyHintAnswer);
+  hintCloseButton.addEventListener("click", closeHint);
 
   document.querySelectorAll("[data-number]").forEach((button) => {
     button.addEventListener("click", () => inputNumber(button.dataset.number));

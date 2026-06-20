@@ -1,5 +1,21 @@
 # QA Checklist
 
+## Learning Hints
+
+- [ ] 不正解入力がある状態ではヒントを出さないこと
+- [ ] Naked Single のヒントが出ること
+- [ ] Hidden Single in Row のヒントが出ること
+- [ ] Hidden Single in Column のヒントが出ること
+- [ ] Hidden Single in Block のヒントが出ること
+- [ ] ヒントの「次へ」「前へ」が機能すること
+- [ ] 「答えを入れる」を押すまで board が変更されないこと
+- [ ] ヒントで入力した数字が given 扱いにならないこと
+- [ ] ヒント使用回数が正しく増えること
+- [ ] ヒントが見つからない場合にエラーにならないこと
+- [ ] iPhone Safari / PWA 表示でヒントカードが見切れないこと
+- [ ] ヒント表示後に通常操作へ戻れること
+- [ ] LocalStorage復元後もヒント機能が破綻しないこと
+
 ## Basic Launch
 
 - [ ] `index.html` を直接開いて基本動作する
@@ -30,10 +46,25 @@
 - [ ] `assets/icons/quiet-sudoku-512.png` が 200 で取得できる
 - [ ] Chrome DevTools の Application > Manifest でエラーがない
 - [ ] Application > Service Workers で service worker が登録される
-- [ ] Application > Cache Storage に `quiet-sudoku-pwa-v2` が作成される
+- [ ] Application > Cache Storage に `quiet-sudoku-pwa-v5` が作成される
 - [ ] オフライン切替後に再読み込みして最低限盤面が表示される
 - [ ] LocalStorage に `quiet-sudoku-*` のキーで保存される
 - [ ] クリア履歴、今日の一問、途中保存が保持される
+
+## Mobile Compact Layout
+
+- [ ] iPhone Safari で、盤面・操作ボタン・数字入力が見切れにくい
+- [ ] 4つの操作ボタンが1行で表示される
+- [ ] 操作ボタンのラベルが「一時停止」「戻す」「消す」「メモ」になっている
+- [ ] メモON状態が見た目で分かる
+- [ ] 無効状態の戻すボタンが薄く表示される
+- [ ] 数字入力ボタンが押しやすい
+- [ ] 数字入力ボタンが1行で表示される
+- [ ] スポンサー枠が数字入力の下に表示される
+- [ ] スポンサー枠がゲーム操作を邪魔しない
+- [ ] スポンサー枠が画面下で不自然に見切れない
+- [ ] PWA standalone 表示でも上下余白が過大にならない
+- [ ] デスクトップ表示が崩れていない
 
 ## Manifest
 
@@ -58,7 +89,7 @@
 
 ## Cache Update Procedure
 
-- [ ] `service-worker.js` の `CACHE_NAME` を `quiet-sudoku-pwa-v3` のように上げる
+- [ ] `service-worker.js` の `CACHE_NAME` を次の `quiet-sudoku-pwa-v*` に上げる
 - [ ] 変更を公開する
 - [ ] 公開 URL を開き直す
 - [ ] Application > Service Workers で新しい service worker が active になることを確認する

@@ -296,12 +296,12 @@ select {
   font-weight: 850;
 }
 
-.cell.related {
-  background: var(--related);
+.cell.related:not(.selected):not(.hint-area):not(.hint-target):not(.hint-wrong) {
+  background: var(--related) !important;
 }
 
-.cell.same {
-  background: var(--same);
+.cell.same:not(.selected):not(.hint-area):not(.hint-target):not(.hint-wrong) {
+  background: var(--same) !important;
 }
 
 .cell.given.related,

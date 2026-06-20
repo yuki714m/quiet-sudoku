@@ -1,4 +1,4 @@
-const CACHE_NAME = "quiet-sudoku-pwa-v5";
+const CACHE_NAME = "quiet-sudoku-pwa-v7";
 const APP_SHELL = [
   "./",
   "./index.html",

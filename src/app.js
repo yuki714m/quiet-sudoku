@@ -11,7 +11,7 @@
   const pauseButton = document.getElementById("pauseButton");
   const resumeButton = document.getElementById("resumeButton");
   const pauseCover = document.getElementById("pauseCover");
-  const undoButton = document.getElementById("undoButton");
+  const completeButton = document.getElementById("completeButton");
   const eraseButton = document.getElementById("eraseButton");
   const hintButton = document.getElementById("hintButton");
   const noteMode = document.getElementById("noteMode");
@@ -237,13 +237,14 @@
 
   function render() {
     renderBoard();
+    renderNumberPad();
     timerText.textContent = formatTime(state.elapsed);
     mistakeCount.textContent = state.mistakes;
     hintCount.textContent = state.hints;
     pauseCover.hidden = !state.paused;
     pauseButton.textContent = state.paused ? "▶" : "⏸";
     pauseButton.setAttribute("aria-label", state.paused ? "再開" : "一時停止");
-    undoButton.disabled = !state.undoStack.length || state.completed;
+    completeButton.disabled = !canCompleteRest();
     eraseButton.disabled = state.completed || state.givens[state.selected];
     hintButton.disabled = state.completed || !state.board.some((value, index) => !value && !state.givens[index]);
     renderHintCard();
@@ -278,6 +279,7 @@
   function classForCell(index, value, selectedValue) {
     const classes = ["cell"];
     if (state.givens[index]) classes.push("given");
+    if (value && !state.givens[index]) classes.push("filled");
     if (index === state.selected) classes.push("selected");
     classes.push(...hintClassesForCell(index));
     if (isSameBox(index, state.selected)) {
@@ -288,6 +290,36 @@
     if (value && selectedValue && value === selectedValue) classes.push("same");
     if (value && value !== puzzleFor(state.difficulty).solution[index]) classes.push("wrong");
     return classes.join(" ");
+  }
+
+  function renderNumberPad() {
+    const counts = numberCounts();
+    const selectedValue = state.board[state.selected];
+    document.querySelectorAll("[data-number]").forEach((button) => {
+      const number = button.dataset.number;
+      const completed = counts[number] >= 9;
+      button.classList.toggle("active-number", Boolean(selectedValue) && selectedValue === number && !completed);
+      button.classList.toggle("completed", completed);
+      button.disabled = state.completed || completed;
+      button.setAttribute("aria-hidden", completed ? "true" : "false");
+      button.tabIndex = completed ? -1 : 0;
+    });
+  }
+
+  function numberCounts() {
+    return state.board.reduce((counts, value) => {
+      if (value) counts[value] = (counts[value] || 0) + 1;
+      return counts;
+    }, {});
+  }
+
+  function remainingBlankCount() {
+    return state.board.filter((value) => !value).length;
+  }
+
+  function canCompleteRest() {
+    const blanks = remainingBlankCount();
+    return !state.paused && !state.completed && blanks > 0 && blanks <= 10;
   }
 
   function hintClassesForCell(index) {
@@ -446,6 +478,18 @@
     clearHint();
     saveState();
     render();
+  }
+
+  function completeRest() {
+    if (!canCompleteRest()) return;
+    const solution = puzzleFor(state.difficulty).solution;
+    pushUndo();
+    clearHint();
+    state.board = state.board.map((value, index) => value || solution[index]);
+    state.notes = state.notes.map((notes, index) => (state.board[index] ? [] : notes));
+    saveState();
+    render();
+    checkComplete();
   }
 
   function clearHint() {
@@ -638,7 +682,7 @@
     render();
   });
 
-  undoButton.addEventListener("click", undo);
+  completeButton.addEventListener("click", completeRest);
   eraseButton.addEventListener("click", eraseSelected);
   hintButton.addEventListener("click", useHint);
   hintPrevButton.addEventListener("click", showPreviousHintStep);

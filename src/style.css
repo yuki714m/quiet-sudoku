@@ -291,7 +291,7 @@ select {
 }
 
 .cell.given {
-  background: #f0eadf;
+  background: var(--surface);
   color: #1f1b15;
   font-weight: 850;
 }
@@ -304,6 +304,7 @@ select {
   background: var(--same);
 }
 
+.cell.given:not(.selected):not(.hint-area):not(.hint-target):not(.hint-wrong),
 .cell.filled:not(.selected):not(.hint-area):not(.hint-target):not(.hint-wrong) {
   background: var(--surface);
 }

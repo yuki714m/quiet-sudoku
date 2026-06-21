@@ -40,8 +40,7 @@
   function wrongCells(board, solution) {
     const cells = [];
     board.forEach((value, index) => {
-      if (!value) return;
-      if (value === solution[index]) return;
+      if (!value || value === solution[index]) return;
       cells.push(cellRef(Math.floor(index / 9), index % 9));
     });
     return cells;
@@ -52,13 +51,7 @@
   }
 
   function hintBase(type, digit, row, col, area) {
-    return {
-      type,
-      digit,
-      row,
-      col,
-      area
-    };
+    return { type, digit, row, col, area };
   }
 
   function findNakedSingle(board, solution) {
@@ -85,6 +78,7 @@
             cells.push({ row, col, candidates: allCandidates[row][col] });
           }
         }
+
         for (const digit of DIGITS) {
           const possible = cells.filter((cell) => cell.candidates.includes(digit));
           if (possible.length !== 1) continue;
@@ -137,50 +131,111 @@
 
   function areaText(area) {
     if (!area) return "このマス";
-    if (area.type === "row") return "この行";
-    if (area.type === "column") return "この列";
-    if (area.type === "block") return "このブロック";
+    if (area.type === "row") return `上から${area.row + 1}行目`;
+    if (area.type === "column") return `左から${area.col + 1}列目`;
+    if (area.type === "block") return `上から${area.blockRow + 1}段目・左から${area.blockCol + 1}列目の3x3ブロック`;
     return "このマス";
   }
 
-  function buildHintSteps(hint) {
+  function coordText(row, col) {
+    return `上から${row + 1}行目・左から${col + 1}列目`;
+  }
+
+  function valuesInRow(board, row) {
+    return DIGITS.filter((digit) => board.slice(row * 9, row * 9 + 9).includes(digit));
+  }
+
+  function valuesInColumn(board, col) {
+    return DIGITS.filter((digit) => Array.from({ length: 9 }, (_, row) => board[indexFor(row, col)]).includes(digit));
+  }
+
+  function valuesInBlock(board, row, col) {
+    const blockRow = Math.floor(row / 3) * 3;
+    const blockCol = Math.floor(col / 3) * 3;
+    const values = [];
+    for (let r = blockRow; r < blockRow + 3; r += 1) {
+      for (let c = blockCol; c < blockCol + 3; c += 1) {
+        const value = board[indexFor(r, c)];
+        if (value) values.push(value);
+      }
+    }
+    return DIGITS.filter((digit) => values.includes(digit));
+  }
+
+  function digitList(values) {
+    return values.length ? values.join("、") : "まだ数字がありません";
+  }
+
+  function possibleCellsForDigit(board, area, digit) {
+    const cells = [];
+    for (let row = 0; row < 9; row += 1) {
+      for (let col = 0; col < 9; col += 1) {
+        if (area.type === "row" && row !== area.row) continue;
+        if (area.type === "column" && col !== area.col) continue;
+        if (area.type === "block") {
+          if (Math.floor(row / 3) !== area.blockRow || Math.floor(col / 3) !== area.blockCol) continue;
+        }
+        if (getCandidates(board, row, col).includes(digit)) cells.push(cellRef(row, col));
+      }
+    }
+    return cells;
+  }
+
+  function buildHintSteps(hint, board) {
     if (!hint || hint.message) return [];
     const targetCell = cellRef(hint.row, hint.col);
+
     if (hint.type === "naked-single") {
+      const candidates = board ? getCandidates(board, hint.row, hint.col) : [hint.digit];
+      const rowValues = board ? valuesInRow(board, hint.row) : [];
+      const colValues = board ? valuesInColumn(board, hint.col) : [];
+      const blockValues = board ? valuesInBlock(board, hint.row, hint.col) : [];
       return [
         {
-          title: "注目する場所",
-          text: "このマスに注目してください。",
+          title: "見る場所",
+          text: `${coordText(hint.row, hint.col)}の空きマスを見ます。まず同じ行・同じ列・同じ3x3ブロックを確認します。`,
           highlight: { type: "cell", row: hint.row, col: hint.col }
         },
         {
-          title: "候補を確認",
-          text: `行・列・3x3ブロックを見ると、このマスに入る候補は${hint.digit}だけです。`,
+          title: "候補を消す",
+          text: `同じ行には ${digitList(rowValues)}、同じ列には ${digitList(colValues)}、同じ3x3ブロックには ${digitList(blockValues)} があります。これらの数字はこのマスには入りません。`,
+          highlight: { type: "cell", row: hint.row, col: hint.col }
+        },
+        {
+          title: "残った候補",
+          text: `1〜9から消していくと、残る候補は ${candidates.join("、")} です。候補が1つだけなので、このマスは確定できます。`,
           highlight: { type: "cell", row: hint.row, col: hint.col }
         },
         {
           title: "答え",
-          text: `そのため、このマスには${hint.digit}が入ります。`,
+          text: `したがって、${coordText(hint.row, hint.col)}には${hint.digit}が入ります。`,
           highlight: { type: "cell", row: hint.row, col: hint.col }
         }
       ];
     }
 
     const subject = areaText(hint.area);
+    const possibleCells = board ? possibleCellsForDigit(board, hint.area, hint.digit) : [targetCell];
+    const possibleText = possibleCells.map(([row, col]) => coordText(row, col)).join("、");
     return [
       {
-        title: "注目する場所",
-        text: `${subject}に注目してください。`,
+        title: "見る場所",
+        text: `${subject}の中で、${hint.digit}を置ける場所を探します。数独では同じ行・列・3x3ブロックに同じ数字は入りません。`,
         highlight: hint.area
       },
       {
-        title: "候補を確認",
-        text: `${subject}では${hint.digit}が入る可能性のあるマスが1つだけです。`,
+        title: "候補を探す",
+        text: `${hint.digit}を仮に置けるマスだけを残すと、候補は ${possibleText} です。ほかのマスは同じ行・列・ブロックの数字とぶつかります。`,
+        highlight: { type: "cells", cells: [targetCell], area: hint.area }
+      },
+      {
+        title: "1か所だけ",
+        text: `${subject}の中で${hint.digit}が入れる場所は1か所だけです。つまり、このマスを確定できます。`,
         highlight: { type: "cells", cells: [targetCell], area: hint.area }
       },
       {
         title: "答え",
-        text: `そのため、このマスには${hint.digit}が入ります。`,
+        text: `したがって、${coordText(hint.row, hint.col)}には${hint.digit}が入ります。`,
         highlight: { type: "cell", row: hint.row, col: hint.col, area: hint.area }
       }
     ];
@@ -212,7 +267,7 @@
       };
     }
 
-    hint.steps = buildHintSteps(hint);
+    hint.steps = buildHintSteps(hint, board);
     return hint;
   }
 

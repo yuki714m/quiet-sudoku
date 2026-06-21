@@ -16,13 +16,52 @@
   </head>
   <body>
     <main class="app-shell">
-      <header class="app-header">
-        <div class="title-block">
+      <section class="home-screen" id="homeScreen" aria-label="ホーム">
+        <header class="home-hero">
           <p class="eyebrow">quiet-sudoku</p>
           <h1>静かに解く、今日の数独</h1>
-        </div>
-        <button class="ghost-button" id="newTodayButton" type="button">今日の一問</button>
-      </header>
+          <p id="homeHistorySummary">最近の記録を読み込んでいます。</p>
+        </header>
+
+        <section class="home-card home-calendar-card" aria-label="プレイ履歴カレンダー">
+          <div class="home-card-header">
+            <div>
+              <span class="status-label">プレイ履歴</span>
+              <h2 id="homeMonthLabel">今月</h2>
+            </div>
+            <strong id="homeMonthScore">0/0</strong>
+          </div>
+          <div class="month-controls" id="monthControls" aria-label="月を選ぶ"></div>
+          <div class="calendar-grid" id="calendarGrid" aria-label="月間カレンダー"></div>
+        </section>
+
+        <section class="home-card play-card" aria-label="今日プレイする難易度">
+          <span class="status-label">今日プレイする</span>
+          <h2>難易度を選ぶ</h2>
+          <div class="level-options" id="homeLevelOptions">
+            <button type="button" data-home-level="easy">Easy</button>
+            <button type="button" data-home-level="normal">Normal</button>
+            <button type="button" data-home-level="hard">Hard</button>
+          </div>
+          <button class="primary-button home-play-button" id="homePlayButton" type="button">プレイ</button>
+          <div class="home-secondary-actions">
+            <button id="homeDailyButton" type="button">今日の一問</button>
+            <button id="continueButton" type="button">続きから</button>
+          </div>
+        </section>
+      </section>
+
+      <section class="game-screen" id="gameScreen" aria-label="プレイ画面" hidden>
+        <header class="app-header">
+          <div class="title-block">
+            <p class="eyebrow">quiet-sudoku</p>
+            <h1>静かに解く、今日の数独</h1>
+          </div>
+          <div class="header-actions">
+            <button class="ghost-button" id="homeBackButton" type="button">ホーム</button>
+            <button class="ghost-button" id="newTodayButton" type="button">今日の一問</button>
+          </div>
+        </header>
 
       <section class="status-bar" aria-label="ゲーム状況">
         <label class="status-chip">
@@ -116,7 +155,8 @@
         </div>
       </aside>
 
-      <footer class="app-version" aria-label="バージョン情報">ver 2026.06.20.6</footer>
+        <footer class="app-version" aria-label="バージョン情報">ver 2026.06.21.3</footer>
+      </section>
     </main>
 
     <dialog class="clear-dialog" id="clearDialog" aria-labelledby="clearTitle">

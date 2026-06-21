@@ -192,11 +192,6 @@
       const blockValues = board ? valuesInBlock(board, hint.row, hint.col) : [];
       return [
         {
-          title: "見る場所",
-          text: `${coordText(hint.row, hint.col)}の空きマスを見ます。まず同じ行・同じ列・同じ3x3ブロックを確認します。`,
-          highlight: { type: "cell", row: hint.row, col: hint.col }
-        },
-        {
           title: "候補を消す",
           text: `同じ行には ${digitList(rowValues)}、同じ列には ${digitList(colValues)}、同じ3x3ブロックには ${digitList(blockValues)} があります。これらの数字はこのマスには入りません。`,
           highlight: { type: "cell", row: hint.row, col: hint.col }
@@ -218,11 +213,6 @@
     const possibleCells = board ? possibleCellsForDigit(board, hint.area, hint.digit) : [targetCell];
     const possibleText = possibleCells.map(([row, col]) => coordText(row, col)).join("、");
     return [
-      {
-        title: "見る場所",
-        text: `${subject}の中で、${hint.digit}を置ける場所を探します。数独では同じ行・列・3x3ブロックに同じ数字は入りません。`,
-        highlight: hint.area
-      },
       {
         title: "候補を探す",
         text: `${hint.digit}を仮に置けるマスだけを残すと、候補は ${possibleText} です。ほかのマスは同じ行・列・ブロックの数字とぶつかります。`,

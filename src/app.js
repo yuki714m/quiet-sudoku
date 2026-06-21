@@ -39,6 +39,17 @@
   const hintNextButton = document.getElementById("hintNextButton");
   const hintApplyButton = document.getElementById("hintApplyButton");
   const hintCloseButton = document.getElementById("hintCloseButton");
+  const homeScreen = document.getElementById("homeScreen");
+  const gameScreen = document.getElementById("gameScreen");
+  const homeHistorySummary = document.getElementById("homeHistorySummary");
+  const homeMonthLabel = document.getElementById("homeMonthLabel");
+  const homeMonthScore = document.getElementById("homeMonthScore");
+  const monthControls = document.getElementById("monthControls");
+  const calendarGrid = document.getElementById("calendarGrid");
+  const homePlayButton = document.getElementById("homePlayButton");
+  const homeDailyButton = document.getElementById("homeDailyButton");
+  const continueButton = document.getElementById("continueButton");
+  const homeBackButton = document.getElementById("homeBackButton");
 
   const state = {
     difficulty: "easy",
@@ -60,6 +71,10 @@
   let toastTimer = 0;
   let activeHint = null;
   let hintStepIndex = 0;
+  let audioContext = null;
+  let currentView = "home";
+  let selectedHomeDifficulty = "easy";
+  let homeMonthDate = new Date();
 
   function emptyNotes() {
     return Array.from({ length: 81 }, () => []);
@@ -89,6 +104,7 @@
     state.source = settings.source || "regular";
     state.dailyDate = settings.dailyDate || "";
     state.undoStack = [];
+    selectedHomeDifficulty = difficulty;
     clearHint();
     difficultySelect.value = difficulty;
     saveState();
@@ -135,6 +151,7 @@
         undoStack: []
       }, parsed, { paused: false });
       difficultySelect.value = state.difficulty;
+      selectedHomeDifficulty = state.difficulty;
       render();
     } catch (error) {
       loadPuzzle("easy");
@@ -146,6 +163,7 @@
     history.unshift(result);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     renderHistory();
+    renderHome();
   }
 
   function readHistory() {
@@ -154,6 +172,14 @@
     } catch (error) {
       return [];
     }
+  }
+
+  function historyForMonth(year, month) {
+    return readHistory().filter((result) => {
+      if (!result.completedAt) return false;
+      const date = new Date(result.completedAt);
+      return date.getFullYear() === year && date.getMonth() === month;
+    });
   }
 
   function readDaily() {
@@ -210,6 +236,102 @@
     )).join("  |  ");
   }
 
+  function renderHome() {
+    const history = readHistory();
+    const today = new Date();
+    const year = homeMonthDate.getFullYear();
+    const month = homeMonthDate.getMonth();
+    const monthHistory = historyForMonth(year, month);
+    const playedDays = new Set(monthHistory.map((result) => result.completedAt.slice(0, 10)));
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const best = monthHistory.reduce((bestTime, result) => (
+      bestTime === 0 || result.elapsed < bestTime ? result.elapsed : bestTime
+    ), 0);
+
+    homeHistorySummary.textContent = history.length
+      ? `累計${history.length}回クリア。今月のベストは${best ? formatTime(best) : "まだなし"}です。`
+      : "まだ記録はありません。今日の1問から静かに始めましょう。";
+    homeMonthLabel.textContent = `${year}年${month + 1}月`;
+    homeMonthScore.textContent = `${playedDays.size}/${daysInMonth}`;
+    continueButton.disabled = !state.board.length || state.completed;
+
+    renderMonthControls(year, month);
+    renderCalendar(year, month, playedDays, today);
+    renderHomeLevels();
+  }
+
+  function renderMonthControls(year, month) {
+    monthControls.innerHTML = "";
+    Array.from({ length: 12 }, (_, index) => index).forEach((monthIndex) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = `${monthIndex + 1}月`;
+      button.className = monthIndex === month ? "active-month" : "";
+      button.addEventListener("click", () => {
+        homeMonthDate = new Date(year, monthIndex, 1);
+        renderHome();
+      });
+      monthControls.appendChild(button);
+    });
+  }
+
+  function renderCalendar(year, month, playedDays, today) {
+    calendarGrid.innerHTML = "";
+    ["日", "月", "火", "水", "木", "金", "土"].forEach((label) => {
+      const dayLabel = document.createElement("span");
+      dayLabel.className = "calendar-weekday";
+      dayLabel.textContent = label;
+      calendarGrid.appendChild(dayLabel);
+    });
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < firstDay; i += 1) {
+      const blank = document.createElement("span");
+      blank.className = "calendar-day blank";
+      calendarGrid.appendChild(blank);
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+      const dateKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "calendar-day";
+      button.textContent = day;
+      button.classList.toggle("played", playedDays.has(dateKey));
+      button.classList.toggle(
+        "today",
+        year === today.getFullYear() && month === today.getMonth() && day === today.getDate()
+      );
+      button.setAttribute("aria-label", `${month + 1}月${day}日${playedDays.has(dateKey) ? " クリア済み" : ""}`);
+      calendarGrid.appendChild(button);
+    }
+  }
+
+  function renderHomeLevels() {
+    document.querySelectorAll("[data-home-level]").forEach((button) => {
+      const active = button.dataset.homeLevel === selectedHomeDifficulty;
+      button.classList.toggle("selected-level", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function showHome() {
+    currentView = "home";
+    homeScreen.hidden = false;
+    gameScreen.hidden = true;
+    clearHint();
+    renderHome();
+  }
+
+  function showGame() {
+    currentView = "game";
+    homeScreen.hidden = true;
+    gameScreen.hidden = false;
+    lastTick = Date.now();
+    render();
+  }
+
   function shortDate(value) {
     if (!value) return "";
     return value.slice(5, 10).replace("-", "/");
@@ -250,7 +372,9 @@
     pauseCover.hidden = !state.paused;
     pauseButton.textContent = state.paused ? "▶" : "⏸";
     pauseButton.setAttribute("aria-label", state.paused ? "再開" : "一時停止");
-    completeButton.disabled = !canCompleteRest();
+    const canComplete = canCompleteRest();
+    completeButton.disabled = !canComplete;
+    completeButton.classList.toggle("ready", canComplete);
     eraseButton.disabled = state.completed || state.givens[state.selected];
     hintButton.disabled = state.completed || !state.board.some((value, index) => !value && !state.givens[index]);
     renderHintCard();
@@ -424,7 +548,7 @@
   }
 
   function inputNumber(number) {
-    if (state.paused || state.completed) return;
+    if (currentView !== "game" || state.paused || state.completed) return;
     const index = state.selected;
     if (state.givens[index]) {
       showToast("最初から入っている数字は編集できません。");
@@ -464,7 +588,7 @@
   }
 
   function eraseSelected() {
-    if (state.paused || state.completed || state.givens[state.selected]) return;
+    if (currentView !== "game" || state.paused || state.completed || state.givens[state.selected]) return;
     pushUndo();
     clearHint();
     state.board[state.selected] = "";
@@ -474,6 +598,7 @@
   }
 
   function undo() {
+    if (currentView !== "game") return;
     const previous = state.undoStack.pop();
     if (!previous) return;
     state.board = previous.board;
@@ -487,7 +612,7 @@
   }
 
   function completeRest() {
-    if (!canCompleteRest()) return;
+    if (currentView !== "game" || !canCompleteRest()) return;
     const solution = puzzleFor(state.difficulty).solution;
     pushUndo();
     clearHint();
@@ -504,7 +629,7 @@
   }
 
   function useHint() {
-    if (state.paused || state.completed) return;
+    if (currentView !== "game" || state.paused || state.completed) return;
     activeHint = QUIET_SUDOKU_HINTS.getNextHint(state.board, puzzleFor(state.difficulty).solution);
     hintStepIndex = 0;
     if (typeof activeHint.row === "number" && typeof activeHint.col === "number") {
@@ -585,11 +710,50 @@
     const solved = state.board.join("") === puzzleFor(state.difficulty).solution;
     if (!solved) return;
     state.completed = true;
+    boardEl.classList.add("complete-pop");
+    window.setTimeout(() => boardEl.classList.remove("complete-pop"), 900);
+    playCompletionSound();
     const result = buildResult();
     saveHistory(result);
     if (state.source === "daily") markDailyComplete(result);
     saveState();
     showClearResult(result);
+  }
+
+  function playCompletionSound() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+
+    try {
+      audioContext = audioContext || new AudioContext();
+      if (audioContext.state === "suspended") audioContext.resume();
+
+      const now = audioContext.currentTime;
+      const master = audioContext.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.08, now + 0.03);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.58);
+      master.connect(audioContext.destination);
+
+      [
+        { frequency: 523.25, start: 0, end: 0.28 },
+        { frequency: 659.25, start: 0.18, end: 0.58 }
+      ].forEach((note) => {
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(note.frequency, now + note.start);
+        gain.gain.setValueAtTime(0.0001, now + note.start);
+        gain.gain.exponentialRampToValueAtTime(0.5, now + note.start + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + note.end);
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start(now + note.start);
+        oscillator.stop(now + note.end + 0.04);
+      });
+    } catch (error) {
+      // Completion sound is a small delight; gameplay should never depend on it.
+    }
   }
 
   function badgeLabels(result) {
@@ -635,7 +799,7 @@
 
   function tick() {
     const now = Date.now();
-    if (!state.paused && !state.completed) {
+    if (currentView === "game" && !state.paused && !state.completed) {
       const delta = Math.floor((now - lastTick) / 1000);
       if (delta > 0) {
         state.elapsed += delta;
@@ -652,6 +816,7 @@
   function loadTodayPuzzle() {
     const entry = ensureTodayEntry();
     loadPuzzle(entry.difficulty, { source: "daily", dailyDate: entry.date });
+    showGame();
     showToast(entry.completed ? "今日の一問をもう一度開きました。" : "今日の一問を開きました。");
   }
 
@@ -678,6 +843,7 @@
 
   difficultySelect.addEventListener("change", () => {
     clearHint();
+    selectedHomeDifficulty = difficultySelect.value;
     loadPuzzle(difficultySelect.value);
   });
 
@@ -701,6 +867,22 @@
   hintApplyButton.addEventListener("click", applyHintAnswer);
   hintCloseButton.addEventListener("click", closeHint);
 
+  document.querySelectorAll("[data-home-level]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedHomeDifficulty = button.dataset.homeLevel;
+      renderHomeLevels();
+    });
+  });
+
+  homePlayButton.addEventListener("click", () => {
+    loadPuzzle(selectedHomeDifficulty);
+    showGame();
+  });
+
+  homeDailyButton.addEventListener("click", loadTodayPuzzle);
+  continueButton.addEventListener("click", showGame);
+  homeBackButton.addEventListener("click", showHome);
+
   document.querySelectorAll("[data-number]").forEach((button) => {
     button.addEventListener("click", () => inputNumber(button.dataset.number));
   });
@@ -710,7 +892,7 @@
   closeClearButton.addEventListener("click", () => clearDialog.close());
   viewHistoryButton.addEventListener("click", () => {
     clearDialog.close();
-    document.querySelector(".progress-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    showHome();
   });
 
   sponsorBox.addEventListener("click", () => {
@@ -733,6 +915,7 @@
   renderSponsor();
   ensureTodayEntry();
   loadState();
+  showHome();
   registerServiceWorker();
   requestPersistentStorage();
   tick();

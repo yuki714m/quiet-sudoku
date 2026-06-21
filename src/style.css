@@ -97,7 +97,7 @@ input:focus-visible {
 
 .home-screen {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .home-screen[hidden],
@@ -106,36 +106,68 @@ input:focus-visible {
 }
 
 .home-hero {
-  min-height: 154px;
-  border: 1px solid rgba(49, 95, 80, 0.22);
-  border-radius: 16px;
+  display: grid;
+  gap: 14px;
+  border: 1px solid rgba(49, 95, 80, 0.18);
+  border-radius: 18px;
   background:
-    linear-gradient(140deg, rgba(220, 233, 226, 0.95), rgba(255, 253, 247, 0.9) 58%),
+    linear-gradient(145deg, rgba(220, 233, 226, 0.94) 0%, rgba(255, 253, 247, 0.94) 62%),
     var(--surface);
-  box-shadow: var(--shadow);
-  padding: 18px;
+  box-shadow: 0 18px 38px rgba(67, 54, 33, 0.1);
+  padding: 16px;
 }
 
-.home-hero h1 {
+.home-hero-copy h1 {
   margin-top: 6px;
-  max-width: 11em;
+  max-width: 12em;
 }
 
-.home-hero p:last-child {
-  margin: 18px 0 0;
-  max-width: 25em;
+.home-hero-copy p:last-child {
+  margin: 10px 0 0;
+  max-width: 27em;
   color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.55;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.52;
+}
+
+.home-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.home-stats div {
+  min-width: 0;
+  border: 1px solid rgba(49, 95, 80, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 253, 247, 0.62);
+  padding: 9px 8px;
+}
+
+.home-stats span,
+.play-card-header span:last-child {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.home-stats strong {
+  display: block;
+  margin-top: 2px;
+  color: var(--accent-strong);
+  font-size: clamp(1rem, 5vw, 1.34rem);
+  font-weight: 950;
+  line-height: 1.1;
 }
 
 .home-card {
-  border: 1px solid rgba(215, 203, 184, 0.9);
-  border-radius: 14px;
-  background: rgba(255, 253, 247, 0.84);
-  box-shadow: 0 10px 24px rgba(67, 54, 33, 0.08);
-  padding: 14px;
+  border: 1px solid rgba(215, 203, 184, 0.86);
+  border-radius: 16px;
+  background: rgba(255, 253, 247, 0.9);
+  box-shadow: 0 12px 26px rgba(67, 54, 33, 0.07);
+  padding: 13px;
 }
 
 .home-card-header {
@@ -147,7 +179,8 @@ input:focus-visible {
 
 .home-card-header h2,
 .play-card h2 {
-  margin-bottom: 0;
+  margin: 2px 0 0;
+  font-size: 1.18rem;
 }
 
 .home-card-header strong {
@@ -156,23 +189,23 @@ input:focus-visible {
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent-strong);
-  padding: 7px 10px;
+  padding: 7px 11px;
   font-size: 0.95rem;
 }
 
 .month-controls {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   margin: 12px 0;
 }
 
 .month-controls button {
   min-width: 0;
-  min-height: 34px;
+  min-height: 32px;
   border-radius: 999px;
   color: var(--accent-strong);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 850;
 }
 
@@ -185,33 +218,37 @@ input:focus-visible {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
+  gap: 4px;
+  border-radius: 14px;
+  background: var(--surface-soft);
+  padding: 8px;
 }
 
 .calendar-weekday,
 .calendar-day {
   display: grid;
   place-items: center;
-  min-height: 34px;
+  min-height: 31px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 800;
 }
 
 .calendar-weekday {
   min-height: 24px;
   color: #9a9082;
-  font-size: 0.74rem;
+  font-size: 0.7rem;
 }
 
 .calendar-day {
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
+  font-variant-numeric: tabular-nums;
 }
 
 .calendar-day.blank {
-  min-height: 34px;
+  min-height: 31px;
 }
 
 .calendar-day.today {
@@ -225,16 +262,34 @@ input:focus-visible {
   color: #fff;
 }
 
+.play-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.play-card-header span:last-child {
+  flex: 0 0 auto;
+  border: 1px solid rgba(49, 95, 80, 0.2);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--accent-strong);
+  padding: 6px 10px;
+  font-size: 0.78rem;
+}
+
 .level-options {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  gap: 7px;
   margin-top: 12px;
 }
 
 .level-options button {
   min-width: 0;
-  min-height: 48px;
+  min-height: 52px;
+  border-radius: 12px;
   color: var(--accent-strong);
   font-weight: 900;
 }
@@ -245,19 +300,17 @@ input:focus-visible {
   box-shadow: inset 0 0 0 2px rgba(49, 95, 80, 0.16);
 }
 
-.home-play-button {
-  width: 100%;
-  min-height: 52px;
-  margin-top: 12px;
-  border-radius: 999px;
-  font-size: 1rem;
+.level-options button:active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
 }
 
 .home-secondary-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
 }
 
 .home-secondary-actions button {

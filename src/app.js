@@ -17,8 +17,6 @@
   const noteMode = document.getElementById("noteMode");
   const toast = document.getElementById("toast");
   const historyText = document.getElementById("historyText");
-  const dailyText = document.getElementById("dailyText");
-  const newTodayButton = document.getElementById("newTodayButton");
   const sponsorBox = document.getElementById("sponsorBox");
   const sponsorImage = document.getElementById("sponsorImage");
   const sponsorName = document.getElementById("sponsorName");
@@ -46,10 +44,11 @@
   const homeMonthScore = document.getElementById("homeMonthScore");
   const monthControls = document.getElementById("monthControls");
   const calendarGrid = document.getElementById("calendarGrid");
-  const homePlayButton = document.getElementById("homePlayButton");
-  const homeDailyButton = document.getElementById("homeDailyButton");
   const continueButton = document.getElementById("continueButton");
   const homeBackButton = document.getElementById("homeBackButton");
+  const homeTotalClears = document.getElementById("homeTotalClears");
+  const homeMonthClears = document.getElementById("homeMonthClears");
+  const homeBestTime = document.getElementById("homeBestTime");
 
   const state = {
     difficulty: "easy",
@@ -244,15 +243,18 @@
     const monthHistory = historyForMonth(year, month);
     const playedDays = new Set(monthHistory.map((result) => result.completedAt.slice(0, 10)));
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const best = monthHistory.reduce((bestTime, result) => (
+    const best = history.reduce((bestTime, result) => (
       bestTime === 0 || result.elapsed < bestTime ? result.elapsed : bestTime
     ), 0);
 
     homeHistorySummary.textContent = history.length
-      ? `累計${history.length}回クリア。今月のベストは${best ? formatTime(best) : "まだなし"}です。`
+      ? `最近は${labelFor(history[0].difficulty)}を${formatTime(history[0].elapsed)}でクリア。今日も静かに続けましょう。`
       : "まだ記録はありません。今日の1問から静かに始めましょう。";
     homeMonthLabel.textContent = `${year}年${month + 1}月`;
     homeMonthScore.textContent = `${playedDays.size}/${daysInMonth}`;
+    homeTotalClears.textContent = String(history.length);
+    homeMonthClears.textContent = `${playedDays.size}日`;
+    homeBestTime.textContent = best ? formatTime(best) : "--:--";
     continueButton.disabled = !state.board.length || state.completed;
 
     renderMonthControls(year, month);
@@ -337,14 +339,6 @@
     return value.slice(5, 10).replace("-", "/");
   }
 
-  function renderDaily() {
-    const entry = ensureTodayEntry();
-    const status = entry.completed
-      ? `クリア済み ${formatTime(entry.elapsed)} / ミス${entry.mistakes}`
-      : "未クリア";
-    dailyText.textContent = `今日(${entry.date})の一問: ${labelFor(entry.difficulty)} / ${status}`;
-  }
-
   function labelFor(difficulty) {
     return puzzleFor(difficulty).name;
   }
@@ -379,7 +373,6 @@
     hintButton.disabled = state.completed || !state.board.some((value, index) => !value && !state.givens[index]);
     renderHintCard();
     renderHistory();
-    renderDaily();
   }
 
   function renderBoard() {
@@ -715,7 +708,6 @@
     playCompletionSound();
     const result = buildResult();
     saveHistory(result);
-    if (state.source === "daily") markDailyComplete(result);
     saveState();
     showClearResult(result);
   }
@@ -760,7 +752,6 @@
     const badges = [];
     if (result.mistakes === 0) badges.push("ノーミス");
     if (result.hints === 0) badges.push("ヒントなし");
-    if (result.source === "daily") badges.push("今日の一問クリア");
     badges.push(`${labelFor(result.difficulty)}クリア`);
     return badges;
   }
@@ -813,13 +804,6 @@
     window.requestAnimationFrame(tick);
   }
 
-  function loadTodayPuzzle() {
-    const entry = ensureTodayEntry();
-    loadPuzzle(entry.difficulty, { source: "daily", dailyDate: entry.date });
-    showGame();
-    showToast(entry.completed ? "今日の一問をもう一度開きました。" : "今日の一問を開きました。");
-  }
-
   function loadNextPuzzle() {
     const choices = difficultyKeys();
     const index = choices.indexOf(state.difficulty);
@@ -870,16 +854,11 @@
   document.querySelectorAll("[data-home-level]").forEach((button) => {
     button.addEventListener("click", () => {
       selectedHomeDifficulty = button.dataset.homeLevel;
-      renderHomeLevels();
+      loadPuzzle(selectedHomeDifficulty);
+      showGame();
     });
   });
 
-  homePlayButton.addEventListener("click", () => {
-    loadPuzzle(selectedHomeDifficulty);
-    showGame();
-  });
-
-  homeDailyButton.addEventListener("click", loadTodayPuzzle);
   continueButton.addEventListener("click", showGame);
   homeBackButton.addEventListener("click", showHome);
 
@@ -887,7 +866,6 @@
     button.addEventListener("click", () => inputNumber(button.dataset.number));
   });
 
-  newTodayButton.addEventListener("click", loadTodayPuzzle);
   anotherPuzzleButton.addEventListener("click", loadNextPuzzle);
   closeClearButton.addEventListener("click", () => clearDialog.close());
   viewHistoryButton.addEventListener("click", () => {
@@ -913,7 +891,6 @@
   });
 
   renderSponsor();
-  ensureTodayEntry();
   loadState();
   showHome();
   registerServiceWorker();

@@ -18,16 +18,32 @@
     <main class="app-shell">
       <section class="home-screen" id="homeScreen" aria-label="ホーム">
         <header class="home-hero">
-          <p class="eyebrow">quiet-sudoku</p>
-          <h1>静かに解く、今日の数独</h1>
-          <p id="homeHistorySummary">最近の記録を読み込んでいます。</p>
+          <div class="home-hero-copy">
+            <p class="eyebrow">quiet-sudoku</p>
+            <h1>静かに解く、今日の数独</h1>
+            <p id="homeHistorySummary">これまでの記録を、静かに整えて表示します。</p>
+          </div>
+          <div class="home-stats" aria-label="プレイ実績">
+            <div>
+              <span>累計クリア</span>
+              <strong id="homeTotalClears">0</strong>
+            </div>
+            <div>
+              <span>今月</span>
+              <strong id="homeMonthClears">0日</strong>
+            </div>
+            <div>
+              <span>ベスト</span>
+              <strong id="homeBestTime">--:--</strong>
+            </div>
+          </div>
         </header>
 
         <section class="home-card home-calendar-card" aria-label="プレイ履歴カレンダー">
           <div class="home-card-header">
             <div>
               <span class="status-label">プレイ履歴</span>
-              <h2 id="homeMonthLabel">今月</h2>
+              <h2 id="homeMonthLabel">2026年6月</h2>
             </div>
             <strong id="homeMonthScore">0/0</strong>
           </div>
@@ -36,16 +52,19 @@
         </section>
 
         <section class="home-card play-card" aria-label="今日プレイする難易度">
-          <span class="status-label">今日プレイする</span>
-          <h2>難易度を選ぶ</h2>
+          <div class="play-card-header">
+            <div>
+              <span class="status-label">今日プレイする</span>
+              <h2>難易度を選んで開始</h2>
+            </div>
+            <span>tap to play</span>
+          </div>
           <div class="level-options" id="homeLevelOptions">
             <button type="button" data-home-level="easy">Easy</button>
             <button type="button" data-home-level="normal">Normal</button>
             <button type="button" data-home-level="hard">Hard</button>
           </div>
-          <button class="primary-button home-play-button" id="homePlayButton" type="button">プレイ</button>
           <div class="home-secondary-actions">
-            <button id="homeDailyButton" type="button">今日の一問</button>
             <button id="continueButton" type="button">続きから</button>
           </div>
         </section>
@@ -59,7 +78,6 @@
           </div>
           <div class="header-actions">
             <button class="ghost-button" id="homeBackButton" type="button">ホーム</button>
-            <button class="ghost-button" id="newTodayButton" type="button">今日の一問</button>
           </div>
         </header>
 
@@ -138,10 +156,6 @@
           <span class="status-label">クリア履歴</span>
           <p id="historyText">まだクリア履歴はありません。</p>
         </div>
-        <div class="info-card">
-          <span class="status-label">今日の一問</span>
-          <p id="dailyText">日付から問題を選べる土台を用意しています。</p>
-        </div>
       </section>
 
       <aside class="sponsor-box" id="sponsorBox" aria-label="スポンサー枠">
@@ -155,7 +169,7 @@
         </div>
       </aside>
 
-        <footer class="app-version" aria-label="バージョン情報">ver 2026.06.21.3</footer>
+        <footer class="app-version" aria-label="バージョン情報">ver 2026.06.21.6</footer>
       </section>
     </main>
 

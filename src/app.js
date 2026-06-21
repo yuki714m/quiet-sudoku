@@ -39,7 +39,6 @@
   const hintCloseButton = document.getElementById("hintCloseButton");
   const homeScreen = document.getElementById("homeScreen");
   const gameScreen = document.getElementById("gameScreen");
-  const homeHistorySummary = document.getElementById("homeHistorySummary");
   const homeMonthLabel = document.getElementById("homeMonthLabel");
   const homeMonthScore = document.getElementById("homeMonthScore");
   const monthControls = document.getElementById("monthControls");
@@ -247,9 +246,6 @@
       bestTime === 0 || result.elapsed < bestTime ? result.elapsed : bestTime
     ), 0);
 
-    homeHistorySummary.textContent = history.length
-      ? `最近は${labelFor(history[0].difficulty)}を${formatTime(history[0].elapsed)}でクリア。今日も静かに続けましょう。`
-      : "まだ記録はありません。今日の1問から静かに始めましょう。";
     homeMonthLabel.textContent = `${year}年${month + 1}月`;
     homeMonthScore.textContent = `${playedDays.size}/${daysInMonth}`;
     homeTotalClears.textContent = String(history.length);

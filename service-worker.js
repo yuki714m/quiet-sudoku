@@ -1,11 +1,11 @@
-const CACHE_NAME = "quiet-sudoku-pwa-v22";
+const CACHE_NAME = "quiet-sudoku-pwa-v25";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./src/style.css",
-  "./src/puzzles.js",
-  "./src/hints.js",
-  "./src/app.js",
+  "./src/style.css?v=20260621-8",
+  "./src/puzzles.js?v=20260621-8",
+  "./src/hints.js?v=20260621-8",
+  "./src/app.js?v=20260621-8",
   "./manifest.webmanifest",
   "./assets/icons/quiet-sudoku-icon.svg",
   "./assets/icons/quiet-sudoku-192.png",

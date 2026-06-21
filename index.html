@@ -12,16 +12,18 @@
     <link rel="icon" href="assets/icons/quiet-sudoku-icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="assets/icons/quiet-sudoku-192.png">
     <title>quiet-sudoku</title>
-    <link rel="stylesheet" href="src/style.css">
+    <link rel="stylesheet" href="src/style.css?v=20260621-8">
   </head>
   <body>
     <main class="app-shell">
       <section class="home-screen" id="homeScreen" aria-label="ホーム">
-        <header class="home-hero">
-          <div class="home-hero-copy">
-            <p class="eyebrow">quiet-sudoku</p>
-            <h1>静かに解く、今日の数独</h1>
-            <p id="homeHistorySummary">これまでの記録を、静かに整えて表示します。</p>
+        <section class="home-card home-calendar-card" aria-label="プレイ履歴カレンダー">
+          <div class="home-card-header">
+            <div>
+              <span class="status-label">プレイ履歴</span>
+              <h2 id="homeMonthLabel">2026年6月</h2>
+            </div>
+            <strong id="homeMonthScore">0/0</strong>
           </div>
           <div class="home-stats" aria-label="プレイ実績">
             <div>
@@ -36,16 +38,6 @@
               <span>ベスト</span>
               <strong id="homeBestTime">--:--</strong>
             </div>
-          </div>
-        </header>
-
-        <section class="home-card home-calendar-card" aria-label="プレイ履歴カレンダー">
-          <div class="home-card-header">
-            <div>
-              <span class="status-label">プレイ履歴</span>
-              <h2 id="homeMonthLabel">2026年6月</h2>
-            </div>
-            <strong id="homeMonthScore">0/0</strong>
           </div>
           <div class="month-controls" id="monthControls" aria-label="月を選ぶ"></div>
           <div class="calendar-grid" id="calendarGrid" aria-label="月間カレンダー"></div>
@@ -169,7 +161,7 @@
         </div>
       </aside>
 
-        <footer class="app-version" aria-label="バージョン情報">ver 2026.06.21.6</footer>
+        <footer class="app-version" aria-label="バージョン情報">ver 2026.06.21.9</footer>
       </section>
     </main>
 
@@ -206,8 +198,8 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="src/puzzles.js"></script>
-    <script src="src/hints.js"></script>
-    <script src="src/app.js"></script>
+    <script src="src/puzzles.js?v=20260621-8"></script>
+    <script src="src/hints.js?v=20260621-8"></script>
+    <script src="src/app.js?v=20260621-8"></script>
   </body>
 </html>
